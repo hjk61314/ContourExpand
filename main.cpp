@@ -8,6 +8,7 @@ using namespace cv;
 
 
 void expand_polygon(vector<Point> &orignal, vector<Point> &out);
+bool find_crossPoint(Point p1, Point p2, Point p3, Point p4, Point &crossPoint);
 
 int main()
 {
@@ -70,7 +71,6 @@ int main()
         cout << "debug contour " << j << " : " << contours[j].size() << ", " << smooth.size() << endl;
 
 
-
         vector<Point> temp;
         approxPolyDP(contours[j], temp, 30, true);
         cout<<"contour_new:"<<j<<endl<<temp<<endl;
@@ -105,11 +105,53 @@ int main()
         line(smoothed,points_expand[i],points_expand[next],Scalar(0,255,0),1);
     }
 
+
     //imshow("original",original);
     imshow("smoothed",smoothed);
     waitKey(0);
 }
 
+
+// use vector cross to divide building contour into two parts
+void divide_contour(vector<Point> &pList, vector<vector<Point> > &out){
+    Point start;
+    Point stop;
+
+
+}
+
+// find cross point of both lines or segments
+// https://blog.csdn.net/hjk61314/article/details/82254381
+// usage:
+// bool bCross = find_crossPoint(Point(0,0),Point(10,10),Point(0,30),Point(20,0),cross);
+// if(bCross)
+bool find_crossPoint(Point p1, Point p2, Point p3, Point p4, Point &crossPoint){
+
+    float a1 = p2.y - p1.y;
+    float b1 = p1.x - p2.x;
+    float c1 = p1.x*p2.y - p2.x*p1.y;
+    float a2 = p4.y - p3.y;
+    float b2 = p3.x - p4.x;
+    float c2 = p3.x*p4.y - p4.x*p3.y;
+    float det= a1*b2 - a2*b1;
+
+    if(det == 0) return false;
+
+    crossPoint.x = (c1*b2 - c2*b1)/det;
+    crossPoint.y = (a1*c2 - a2*c1)/det;
+
+    // Now this is cross point of lines
+    // Do we need the cross Point of segments(need to judge x,y within 4 endpoints)
+    if((abs(crossPoint.x -(p1.x+p2.x)/2) <= abs(p2.x-p1.x)/2) &&
+       (abs(crossPoint.y -(p1.y+p2.y)/2) <= abs(p2.y-p1.y)/2) &&
+       (abs(crossPoint.x -(p3.x+p4.x)/2) <= abs(p4.x-p3.x)/2) &&
+       (abs(crossPoint.y -(p3.y+p4.y)/2) <= abs(p4.y-p3.y)/2))
+    {
+        return true;
+    }
+
+    return false;
+}
 
 // Ref 多边形或轮廓等距离外扩或收缩
 // https://blog.csdn.net/hjk61314/article/details/82112610
